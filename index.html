@@ -3,545 +3,932 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academic Performance Tracker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <title>GPA Predictor & Advisor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
+        /* (*** KEEP YOUR EXISTING CSS HERE ***) */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        
+
         .container {
-            max-width: 1400px;
+            max-width: 900px;
             margin: 0 auto;
         }
-        
-        header {
+
+        .card {
             background: white;
+            border-radius: 20px;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 30px;
-            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
         }
-        
+
         h1 {
             color: #667eea;
+            text-align: center;
             font-size: 2.5em;
             margin-bottom: 10px;
         }
-        
+
         .subtitle {
+            text-align: center;
             color: #666;
-            font-size: 1.2em;
-        }
-        
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
             margin-bottom: 30px;
         }
-        
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+
+        .input-group {
+            margin: 20px 0;
         }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
-        
-        .card-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .card-icon {
-            font-size: 2.5em;
-            margin-right: 15px;
-        }
-        
-        .card-title {
-            font-size: 1.3em;
-            color: #333;
-        }
-        
-        .metric {
-            font-size: 3em;
+
+        label {
+            display: block;
             font-weight: bold;
-            color: #667eea;
-            margin: 10px 0;
-        }
-        
-        .metric-label {
-            color: #999;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .chart-card {
-            grid-column: span 2;
-        }
-        
-        .controls {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        
-        .controls h3 {
-            margin-bottom: 15px;
-            color: #667eea;
-        }
-        
-        select, button {
-            padding: 12px 20px;
-            border-radius: 8px;
-            border: 2px solid #667eea;
-            font-size: 1em;
-            margin-right: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        select {
-            background: white;
             color: #333;
+            margin-bottom: 8px;
         }
-        
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .semester-input {
+            display: grid;
+            grid-template-columns: minmax(100px, 2fr) minmax(100px, 1fr) auto;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
         button {
             background: #667eea;
             color: white;
             border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            line-height: 1;
         }
-        
+
         button:hover {
             background: #764ba2;
             transform: scale(1.05);
         }
-        
-        .transcript {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            font-family: 'Courier New', monospace;
+
+        .btn-add {
+            background: #4caf50;
+        }
+
+        .btn-remove {
+            background: #f44336;
+            padding: 8px 16px;
+        }
+
+        .btn-analyze {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .results {
             display: none;
         }
-        
-        .transcript.active {
+
+        .results.active {
             display: block;
         }
-        
-        .transcript-header {
-            text-align: center;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .semester-section {
-            margin: 20px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        th {
-            background: #667eea;
-            color: white;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
-        
-        .status-excellent {
-            background: #4caf50;
-            color: white;
-        }
-        
-        .status-good {
-            background: #2196F3;
-            color: white;
-        }
-        
-        .status-fair {
-            background: #ff9800;
-            color: white;
-        }
-        
-        .prediction-box {
+
+        .metric-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 20px;
             border-radius: 10px;
-            margin-top: 15px;
+            margin: 15px 0;
+            text-align: center;
         }
-        
-        .prediction-box h4 {
-            margin-bottom: 10px;
+
+        .metric-value {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .recommendation-box {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .recommendation-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .recommendation-box h4 {
+            color: #764ba2;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        .recommendation-box ul {
+            margin-left: 20px;
+        }
+
+        .recommendation-box li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .trend-indicator {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .trend-up {
+            background: #4caf50;
+            color: white;
+        }
+
+        .trend-down {
+            background: #f44336;
+            color: white;
+        }
+
+        .trend-stable {
+            background: #ff9800;
+            color: white;
+        }
+
+        .classification {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .class-first {
+            background: #4caf50;
+            color: white;
+        }
+
+        .class-second-upper {
+            background: #2196F3;
+            color: white;
+        }
+
+        .class-second-lower {
+            background: #ff9800;
+            color: white;
+        }
+
+        .class-third {
+            background: #ff5722;
+            color: white;
+        }
+
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 5px solid #c62828;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 5px solid #2e7d32;
+        }
+
+        /* Download Button Update */
+        #downloadButtons {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
         }
         
         @media (max-width: 768px) {
-            .chart-card {
-                grid-column: span 1;
+            .semester-input {
+                grid-template-columns: 1fr;
             }
+            .semester-input input:last-of-type {
+                margin-bottom: 10px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .metric-value {
+                font-size: 2em;
+            }
+            #downloadButtons {
+                flex-direction: column;
+            }
+        }
+        /* New PDF Specific Class - Hidden during analysis, shown only for PDF capture */
+        .pdf-data-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+            font-size: 10px;
+        }
+        .pdf-data-table th, .pdf-data-table td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+        }
+        .pdf-data-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Academic Performance Tracker</h1>
-            <p class="subtitle">Beyond Excel: Python-Powered Analytics</p>
-            <p style="color: #999; margin-top: 10px;">DelSU Tech Invasion 3.0 | Emmanuel Akaluese</p>
-        </header>
-        
-        <div class="controls">
-            <h3>Select Student</h3>
-            <select id="studentSelect">
-                <option value="chioma">Chioma Adeyemi (STU001)</option>
-                <option value="emeka">Emeka Johnson (STU002)</option>
-            </select>
-            <button onclick="updateDashboard()">Analyze Performance</button>
-            <button onclick="toggleTranscript()">Generate Transcript</button>
-            <button onclick="predictOutcome()">Predict Future</button>
+        <div class="card">
+            <h1>GPA Predictor & Advisor</h1>
+            <p class="subtitle">Enter your semester GPAs to get predictions and personalized recommendations</p>
+            
+            <div class="input-group">
+                <label for="studentName">Your Name</label>
+                <input type="text" id="studentName" placeholder="Enter your full name">
+            </div>
+            
+            <div class="input-group">
+                <label for="studentId">Student ID (Optional)</label>
+                <input type="text" id="studentId" placeholder="Enter your student ID">
+            </div>
+            
+            <div class="input-group">
+                <label>Your Semester GPAs</label>
+                <div id="semesterInputs">
+                    <div class="semester-input">
+                        <input type="text" class="semester-name" placeholder="e.g., 100L 1st Semester" value="100L 1st Semester">
+                        <input type="number" class="semester-gpa" placeholder="GPA (0-5)" min="0" max="5" step="0.01">
+                        <button class="btn-remove" onclick="removeSemester(this)">Remove</button>
+                    </div>
+                    <div class="semester-input">
+                        <input type="text" class="semester-name" placeholder="e.g., 100L 2nd Semester" value="100L 2nd Semester">
+                        <input type="number" class="semester-gpa" placeholder="GPA (0-5)" min="0" max="5" step="0.01">
+                        <button class="btn-remove" onclick="removeSemester(this)">Remove</button>
+                    </div>
+                </div>
+                <button class="btn-add" onclick="addSemester()">+ Add Another Semester</button>
+            </div>
+            
+            <div class="input-group">
+                <label for="remainingSemesters"> Semesters Remaining</label>
+                <input type="number" id="remainingSemesters" placeholder="How many semesters left?" min="1" value="4">
+            </div>
+            
+            <button class="btn-analyze" onclick="analyze()"> Analyze My Performance</button>
         </div>
         
-        <div class="dashboard" id="dashboard">
+        <div class="results" id="results">
             <div class="card">
-                <div class="card-header">
-                    <span class="card-icon"></span>
-                    <span class="card-title">Current CGPA</span>
+                <h2 style="color: #667eea; text-align: center;"> Your Performance Analysis</h2>
+                
+                <div class="metric-card">
+                    <div class="metric-label">Current CGPA</div>
+                    <div class="metric-value" id="cgpaValue">0.00</div>
+                    <div class="classification" id="classification"></div>
                 </div>
-                <div class="metric" id="cgpa">4.67</div>
-                <div class="metric-label">Cumulative Grade Point Average</div>
-                <span class="status-badge status-excellent" id="statusBadge">First Class</span>
-            </div>
-            
-            <div class="card">
-                <div class="card-icon"></div>
-                <div class="card-title">Total Credits</div>
-                <div class="metric" id="totalCredits">75</div>
-                <div class="metric-label">Credit Units Completed</div>
-            </div>
-            
-            <div class="card">
-                <div class="card-icon"></div>
-                <div class="card-title">Performance Trend</div>
-                <div class="metric" id="trend">↗️ +0.12</div>
-                <div class="metric-label">Average Semester Improvement</div>
-            </div>
-            
-            <div class="card chart-card">
-                <div class="card-header">
-                    <span class="card-icon"></span>
-                    <span class="card-title">GPA Progression</span>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;">
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 1.5em;"></div>
+                        <div style="font-weight: bold; margin: 10px 0;" id="trendStatus">Performance Trend</div>
+                        <div id="trendIndicator"></div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 1.5em;"></div>
+                        <div style="font-weight: bold; margin: 10px 0;">Next Semester (Predicted)</div>
+                        <div style="font-size: 2em; color: #667eea;" id="predictedGPA">0.00</div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 1.5em;"></div>
+                        <div style="font-weight: bold; margin: 10px 0;">Projected Final CGPA</div>
+                        <div style="font-size: 2em; color: #667eea;" id="projectedCGPA">0.00</div>
+                    </div>
                 </div>
-                <canvas id="gpaChart"></canvas>
-            </div>
-            
-            <div class="card chart-card">
-                <div class="card-header">
-                    <span class="card-icon"></span>
-                    <span class="card-title">Grade Distribution</span>
+                
+                <div class="chart-container">
+                    <canvas id="gpaChart"></canvas>
                 </div>
-                <canvas id="gradeChart"></canvas>
-            </div>
-        </div>
-        
-        <div class="transcript" id="transcript">
-            <div class="transcript-header">
-                <h2>DELTA STATE UNIVERSITY, ABRAKA</h2>
-                <h3>OFFICIAL ACADEMIC TRANSCRIPT</h3>
-                <p style="margin-top: 10px;">Generated: <span id="dateGenerated"></span></p>
-            </div>
-            
-            <div style="margin: 20px 0;">
-                <strong>Student Name:</strong> <span id="studentName">Chioma Adeyemi</span><br>
-                <strong>Student ID:</strong> <span id="studentId">STU001</span><br>
-                <strong>Program:</strong> Computer Science<br>
-                <strong>CGPA:</strong> <span id="transcriptCGPA">4.67</span>
-            </div>
-            
-            <div id="semesterDetails"></div>
-            
-            <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f0f0f0; border-radius: 10px;">
-                <h3>FINAL CLASSIFICATION</h3>
-                <h2 style="color: #667eea; margin-top: 10px;" id="classification">FIRST CLASS HONOURS</h2>
+                
+                <div id="recommendationsContainer"></div>
+                
+                <div id="pathToFirstClass"></div>
+                
+                <div style="display: none;">
+                    <table id="gpaDataTable" class="pdf-data-table"></table>
+                </div>
+
+                <div id="downloadButtons">
+                    <button style="background: #b73427;" onclick="downloadPDFReport()"> Download Report as PDF</button>
+                </div>
             </div>
         </div>
     </div>
     
     <script>
-        // Student Data
-        const studentData = {
-            chioma: {
-                name: "Chioma Adeyemi",
-                id: "STU001",
-                cgpa: 4.67,
-                semesters: [
-                    { name: "100L 1st", gpa: 4.60, units: 15 },
-                    { name: "100L 2nd", gpa: 4.67, units: 15 },
-                    { name: "200L 1st", gpa: 4.67, units: 15 },
-                    { name: "200L 2nd", gpa: 5.00, units: 15 },
-                    { name: "300L 1st", gpa: 4.73, units: 15 }
-                ],
-                grades: { A: 21, B: 4, C: 0, D: 0, F: 0 },
-                courses: [
-                    { semester: "100L 1st", code: "MTH101", title: "Calculus I", units: 3, grade: "A" },
-                    { semester: "100L 1st", code: "ENG101", title: "English I", units: 2, grade: "B" },
-                    { semester: "100L 1st", code: "PHY101", title: "Physics I", units: 3, grade: "B" },
-                    { semester: "100L 1st", code: "CHM101", title: "Chemistry I", units: 3, grade: "A" },
-                    { semester: "100L 1st", code: "CSC101", title: "Intro to CS", units: 4, grade: "A" }
-                ]
-            },
-            emeka: {
-                name: "Emeka Johnson",
-                id: "STU002",
-                cgpa: 4.13,
-                semesters: [
-                    { name: "100L 1st", gpa: 3.73, units: 15 },
-                    { name: "100L 2nd", gpa: 4.00, units: 15 },
-                    { name: "200L 1st", gpa: 4.13, units: 15 },
-                    { name: "200L 2nd", gpa: 4.60, units: 15 },
-                    { name: "300L 1st", gpa: 4.80, units: 15 }
-                ],
-                grades: { A: 14, B: 9, C: 2, D: 0, F: 0 },
-                courses: [
-                    { semester: "100L 1st", code: "MTH101", title: "Calculus I", units: 3, grade: "B" },
-                    { semester: "100L 1st", code: "ENG101", title: "English I", units: 2, grade: "C" },
-                    { semester: "100L 1st", code: "PHY101", title: "Physics I", units: 3, grade: "B" },
-                    { semester: "100L 1st", code: "CHM101", title: "Chemistry I", units: 3, grade: "B" },
-                    { semester: "100L 1st", code: "CSC101", title: "Intro to CS", units: 4, grade: "B" }
-                ]
-            }
-        };
+        let chart;
         
-        let gpaChart, gradeChart;
-        
-        function updateDashboard() {
-            const selectedStudent = document.getElementById('studentSelect').value;
-            const student = studentData[selectedStudent];
+        // Helper function for naming semesters
+        function getDefaultSemesterName(count) {
+            const levels = ['100L', '200L', '300L', '400L', '500L', '600L'];
+            const levelIndex = Math.floor((count - 1) / 2);
+            const semesterNum = ((count - 1) % 2) + 1;
             
-            // Update metrics
-            document.getElementById('cgpa').textContent = student.cgpa.toFixed(2);
-            document.getElementById('totalCredits').textContent = student.semesters.reduce((sum, sem) => sum + sem.units, 0);
+            let suffix = 'th';
+            if (semesterNum === 1) suffix = 'st';
+            else if (semesterNum === 2) suffix = 'nd';
             
-            // Calculate trend
-            const trend = student.semesters[student.semesters.length - 1].gpa - student.semesters[0].gpa;
-            const trendIcon = trend > 0 ? '↗️' : trend < 0 ? '↘️' : '➡️';
-            document.getElementById('trend').textContent = `${trendIcon} ${trend > 0 ? '+' : ''}${(trend / (student.semesters.length - 1)).toFixed(2)}`;
-            
-            // Update status badge
-            const badge = document.getElementById('statusBadge');
-            if (student.cgpa >= 4.5) {
-                badge.textContent = 'First Class';
-                badge.className = 'status-badge status-excellent';
-            } else if (student.cgpa >= 3.5) {
-                badge.textContent = 'Second Class Upper';
-                badge.className = 'status-badge status-good';
-            } else {
-                badge.textContent = 'Second Class Lower';
-                badge.className = 'status-badge status-fair';
+            if (levelIndex < levels.length) {
+                return `${levels[levelIndex]} ${semesterNum}${suffix} Semester`;
             }
+            return `Semester ${count}`;
+        }
+
+        function addSemester() {
+            const container = document.getElementById('semesterInputs');
+            const count = container.children.length + 1;
+            const defaultName = getDefaultSemesterName(count);
             
-            // Update charts
-            updateGPAChart(student);
-            updateGradeChart(student);
+            const div = document.createElement('div');
+            div.className = 'semester-input';
+            div.innerHTML = `
+                <input type="text" class="semester-name" placeholder="Semester name" value="${defaultName}">
+                <input type="number" class="semester-gpa" placeholder="GPA (0-5)" min="0" max="5" step="0.01">
+                <button class="btn-remove" onclick="removeSemester(this)">Remove</button>
+            `;
+            container.appendChild(div);
         }
         
-        function updateGPAChart(student) {
+        function removeSemester(btn) {
+            const container = document.getElementById('semesterInputs');
+            if (container.children.length > 2) {
+                btn.parentElement.remove();
+            } else {
+                alert('You need at least 2 semesters for analysis!');
+            }
+        }
+        
+        function analyze() {
+            const studentName = document.getElementById('studentName').value.trim() || 'Student';
+            const remainingSemesters = parseInt(document.getElementById('remainingSemesters').value) || 4;
+            
+            const semesterNames = Array.from(document.querySelectorAll('.semester-name')).map(el => el.value.trim());
+            const semesterGPAs = Array.from(document.querySelectorAll('.semester-gpa')).map(el => parseFloat(el.value));
+            
+            if (semesterGPAs.some(gpa => isNaN(gpa) || gpa < 0 || gpa > 5)) {
+                alert('Please enter valid GPAs (0-5) for all semesters!');
+                return;
+            }
+            
+            if (semesterGPAs.length < 2) {
+                alert('Please enter at least 2 semesters!');
+                return;
+            }
+            
+            const cgpa = semesterGPAs.reduce((a, b) => a + b, 0) / semesterGPAs.length;
+            
+            // Linear Regression calculation
+            const n = semesterGPAs.length;
+            const xData = Array.from({ length: n }, (_, i) => i + 1);
+            
+            const sumX = xData.reduce((a, b) => a + b, 0);
+            const sumY = semesterGPAs.reduce((a, b) => a + b, 0);
+            const sumXY = xData.map((x, i) => x * semesterGPAs[i]).reduce((a, b) => a + b, 0);
+            const sumXX = xData.map(x => x * x).reduce((a, b) => a + b, 0);
+
+            const m = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            const avgChange = m;
+
+            const c = (sumY - m * sumX) / n;
+            let predictedGPA = m * (n + 1) + c; 
+            predictedGPA = Math.max(0, Math.min(5, predictedGPA));
+            
+            const projectedCGPA = (semesterGPAs.reduce((a, b) => a + b, 0) + (predictedGPA * remainingSemesters)) / (semesterGPAs.length + remainingSemesters);
+            
+            // Display results
+            document.getElementById('cgpaValue').textContent = cgpa.toFixed(2);
+            document.getElementById('predictedGPA').textContent = predictedGPA.toFixed(2);
+            document.getElementById('projectedCGPA').textContent = projectedCGPA.toFixed(2);
+            
+            // Classification Logic
+            let classification, classStyle;
+            if (cgpa >= 4.50) {
+                classification = '🏆 FIRST CLASS HONOURS';
+                classStyle = 'class-first';
+            } else if (cgpa >= 3.50) {
+                classification = '🥈 SECOND CLASS HONOURS (UPPER)';
+                classStyle = 'class-second-upper';
+            } else if (cgpa >= 2.50) {
+                classification = '🥉 SECOND CLASS HONOURS (LOWER)';
+                classStyle = 'class-second-lower';
+            } else {
+                classification = 'THIRD CLASS HONOURS';
+                classStyle = 'class-third';
+            }
+            
+            const classDiv = document.getElementById('classification');
+            classDiv.textContent = classification;
+            classDiv.className = `classification ${classStyle}`;
+            
+            // Trend Logic
+            let trendText, trendClass;
+            const changeThreshold = 0.05;
+            if (avgChange > changeThreshold) {
+                trendText = 'IMPROVING';
+                trendClass = 'trend-up';
+            } else if (avgChange < -changeThreshold) {
+                trendText = 'DECLINING';
+                trendClass = 'trend-down';
+            } else {
+                trendText = 'TABLE';
+                trendClass = 'trend-stable';
+            }
+            
+            document.getElementById('trendStatus').textContent = 'Performance Trend';
+            document.getElementById('trendIndicator').innerHTML = `<span class="trend-indicator ${trendClass}">${trendText} (Avg change: ${avgChange.toFixed(2)})</span>`;
+            
+            // Create chart
+            createChart(semesterNames, semesterGPAs, predictedGPA, cgpa);
+            
+            // Generate recommendations
+            generateRecommendations(cgpa, avgChange, classification);
+            
+            // Path to first class
+            generatePathToFirstClass(cgpa, semesterGPAs.length, remainingSemesters);
+            
+            // Create hidden GPA table for PDF
+            createGpaDataTable(semesterNames, semesterGPAs);
+            
+            // Show results
+            document.getElementById('results').classList.add('active');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function createChart(names, gpas, predicted, cgpa) {
             const ctx = document.getElementById('gpaChart').getContext('2d');
             
-            if (gpaChart) gpaChart.destroy();
+            if (chart) chart.destroy();
             
-            gpaChart = new Chart(ctx, {
+            const allLabels = [...names, 'Next Semester\n(Predicted)'];
+            const allData = [...gpas, predicted];
+            
+            chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: student.semesters.map(s => s.name),
+                    labels: allLabels,
                     datasets: [{
-                        label: 'GPA per Semester',
-                        data: student.semesters.map(s => s.gpa),
+                        label: 'Semester GPA',
+                        data: allData,
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
                         pointRadius: 6,
-                        pointHoverRadius: 8
+                        pointHoverRadius: 8,
+                        segment: {
+                            borderDash: ctx => ctx.p1DataIndex === gpas.length ? [5, 5] : undefined,
+                            borderColor: ctx => ctx.p1DataIndex === gpas.length ? '#764ba2' : '#667eea'
+                        }
+                    }, {
+                        label: `Current CGPA (${cgpa.toFixed(2)})`,
+                        data: Array(allLabels.length).fill(cgpa),
+                        borderColor: '#f44336',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'First Class (4.50)',
+                        data: Array(allLabels.length).fill(4.5),
+                        borderColor: '#4caf50',
+                        borderWidth: 2,
+                        borderDash: [10, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Second Class Upper (3.50)',
+                        data: Array(allLabels.length).fill(3.5),
+                        borderColor: '#ff9800',
+                        borderWidth: 2,
+                        borderDash: [10, 5],
+                        pointRadius: 0,
+                        fill: false
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
                     plugins: {
-                        legend: { display: true }
+                        title: {
+                            display: true,
+                            text: 'Your GPA Journey & Prediction',
+                            font: { size: 18, weight: 'bold' }
+                        },
+                        legend: { display: true, position: 'bottom' }
                     },
                     scales: {
                         y: {
                             beginAtZero: false,
-                            min: 3.0,
-                            max: 5.0,
+                            min: 0,
+                            max: 5.5,
+                            title: {
+                                display: true,
+                                text: 'GPA',
+                                font: { size: 14 }
+                            },
                             ticks: { stepSize: 0.5 }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Semester',
+                                font: { size: 14 }
+                            }
                         }
                     }
                 }
             });
         }
         
-        function updateGradeChart(student) {
-            const ctx = document.getElementById('gradeChart').getContext('2d');
+        function generateRecommendations(cgpa, avgChange, classification) {
+            // (*** The rest of your existing recommendation logic ***)
+            const container = document.getElementById('recommendationsContainer');
             
-            if (gradeChart) gradeChart.destroy();
+            let recommendations = '<div class="recommendation-box"><h3>💡 Personalized Recommendations</h3>';
             
-            gradeChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['A', 'B', 'C', 'D', 'F'],
-                    datasets: [{
-                        data: [
-                            student.grades.A,
-                            student.grades.B,
-                            student.grades.C,
-                            student.grades.D,
-                            student.grades.F
-                        ],
-                        backgroundColor: [
-                            '#4caf50',
-                            '#2196F3',
-                            '#ff9800',
-                            '#ff5722',
-                            '#f44336'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { position: 'right' }
+            if (cgpa >= 4.50) {
+                recommendations += `
+                    <h4>🏆 Excellence Maintenance Plan</h4>
+                    <ul>
+                        <li>✓ Maintain rigorous study schedule</li>
+                        <li>✓ Take leadership in group projects</li>
+                        <li>✓ Consider advanced/elective courses</li>
+                        <li>✓ Pursue research opportunities</li>
+                        <li>✓ Build professional network</li>
+                        <li>✓ Mentor struggling students</li>
+                    </ul>
+                `;
+            } else if (cgpa >= 3.50) {
+                recommendations += `
+                    <h4>🥈 Push for First Class Strategy</h4>
+                    <ul>
+                        <li>✓ Identify weak areas and focus on them</li>
+                        <li>✓ Form or join study groups</li>
+                        <li>✓ Visit lecturers during office hours</li>
+                        <li>✓ Use active recall and spaced repetition</li>
+                        <li>✓ Practice past questions extensively</li>
+                        <li>✓ Create weekly study schedule</li>
+                    </ul>
+                `;
+            } else if (cgpa >= 2.50) {
+                recommendations += `
+                    <h4>🥉 Improvement Action Plan</h4>
+                    <ul>
+                        <li>✓ Identify your 3 weakest subjects</li>
+                        <li>✓ Find study partners or tutors</li>
+                        <li>✓ Attend all classes - attendance matters!</li>
+                        <li>✓ Start assignments the day they're given</li>
+                        <li>✓ Study at least 2 hours daily</li>
+                        <li>✓ Join academic support programs</li>
+                    </ul>
+                `;
+            } else {
+                recommendations += `
+                    <h4>⚠️ Urgent Intervention Plan</h4>
+                    <ul>
+                        <li>✓ Meet with academic advisor IMMEDIATELY</li>
+                        <li>✓ Assess if you're in the right program</li>
+                        <li>✓ Create structured daily routine</li>
+                        <li>✓ Eliminate all major distractions</li>
+                        <li>✓ Join peer tutoring programs</li>
+                        <li>✓ Seek counseling if needed</li>
+                    </ul>
+                `;
+            }
+            
+            recommendations += '<h4>📈 Based on Your Trend:</h4><ul>';
+            const changeThreshold = 0.05;
+            if (avgChange > changeThreshold) {
+                recommendations += `
+                    <li>You're improving! Keep up the momentum</li>
+                    <li>✓ Identify what's working and do more of it</li>
+                    <li>✓ Set even higher goals</li>
+                `;
+            } else if (avgChange < -changeThreshold) {
+                recommendations += `
+                    <li>⚠️ Your performance is declining - take action now</li>
+                    <li>✓ Identify what changed recently</li>
+                    <li>✓ Return to strategies that worked before</li>
+                    <li>✓ Seek help immediately</li>
+                `;
+            } else {
+                recommendations += `
+                    <li>➡️ Steady performance - time to level up</li>
+                    <li>✓ Break out of your comfort zone</li>
+                    <li>✓ Try new study techniques</li>
+                `;
+            }
+            
+            recommendations += '</ul></div>';
+            container.innerHTML = recommendations;
+        }
+        
+        function generatePathToFirstClass(cgpa, completedSemesters, remainingSemesters) {
+            // (*** The rest of your existing Path to First Class logic ***)
+            const container = document.getElementById('pathToFirstClass');
+            
+            let content = '<div class="recommendation-box"><h3>Your Path to First Class</h3>';
+            
+            if (cgpa >= 4.50) {
+                content += `
+                    <div class="success">
+                        <strong>🏆 CONGRATULATIONS! You're already in First Class territory!</strong>
+                        <p style="margin-top: 10px;">Maintain GPA above 4.0 each semester to secure your First Class.</p>
+                    </div>
+                `;
+            } else {
+                const targetCGPA = 4.50;
+                const currentTotal = cgpa * completedSemesters;
+                const totalSemesters = completedSemesters + remainingSemesters;
+                const requiredTotal = targetCGPA * totalSemesters;
+                const requiredSum = requiredTotal - currentTotal;
+                const requiredAvgGPA = requiredSum / remainingSemesters;
+                
+                content += `
+                    <p><strong>Current CGPA:</strong> ${cgpa.toFixed(2)}</p>
+                    <p><strong>Target CGPA:</strong> 4.50 (First Class)</p>
+                    <p><strong>Gap:</strong> ${(targetCGPA - cgpa).toFixed(2)} points</p>
+                    <p><strong>Semesters Remaining:</strong> ${remainingSemesters}</p>
+                    <br>
+                `;
+                
+                if (requiredAvgGPA <= 5.0 && requiredAvgGPA > 0) {
+                    let difficulty, advice;
+                    
+                    if (requiredAvgGPA >= 4.8) {
+                        difficulty = 'VERY CHALLENGING ';
+                        advice = 'Requires nearly perfect grades (mostly As). Strategic course selection essential.';
+                    } else if (requiredAvgGPA >= 4.5) {
+                        difficulty = 'CHALLENGING BUT ACHIEVABLE ';
+                        advice = 'Consistent A grades needed. Very few Bs allowed. Strong discipline required.';
+                    } else if (requiredAvgGPA >= 4.0) {
+                        difficulty = 'ACHIEVABLE WITH EFFORT ';
+                        advice = 'Mix of As and Bs acceptable. Consistent study habits essential.';
+                    } else {
+                        difficulty = 'VERY ACHIEVABLE ';
+                        advice = 'Well within reach! Maintain steady improvement and focus.';
                     }
+                    
+                    content += `
+                        <div class="success">
+                            <p><strong>Required Average GPA:</strong> ${requiredAvgGPA.toFixed(2)} per semester</p>
+                            <p><strong>Difficulty Level:</strong> ${difficulty}</p>
+                            <p style="margin-top: 10px;">${advice}</p>
+                        </div>
+                    `;
+                } else {
+                    const target21 = 3.50;
+                    const required21Total = target21 * totalSemesters;
+                    const required21Sum = required21Total - currentTotal;
+                    const required21AvgGPA = required21Sum / remainingSemesters;
+                    
+                    content += `
+                        <div class="error">
+                            <p><strong>First Class is mathematically challenging from current position.</strong></p>
+                            <p style="margin-top: 10px;">Required average: ${requiredAvgGPA.toFixed(2)} (exceeds maximum 5.0)</p>
+                        </div>
+                        <br>
+                        <div class="success">
+                            <p><strong>Alternative Goal: Second Class Upper (3.50)</strong></p>
+                            <p>Required Average GPA: ${required21AvgGPA.toFixed(2)}</p>
+                            <p style="margin-top: 10px;">This goal is ACHIEVABLE! Focus your efforts here.</p>
+                        </div>
+                    `;
                 }
-            });
+            }
+            
+            content += '</div>';
+            container.innerHTML = content;
         }
-        
-        function toggleTranscript() {
-            const transcript = document.getElementById('transcript');
-            const selectedStudent = document.getElementById('studentSelect').value;
-            const student = studentData[selectedStudent];
-            
-            // Update transcript details
-            document.getElementById('studentName').textContent = student.name;
-            document.getElementById('studentId').textContent = student.id;
-            document.getElementById('transcriptCGPA').textContent = student.cgpa.toFixed(2);
-            document.getElementById('dateGenerated').textContent = new Date().toLocaleDateString('en-US', { 
-                year: 'numeric', month: 'long', day: 'numeric' 
-            });
-            
-            // Generate semester details
-            let semesterHTML = '';
-            student.semesters.forEach(sem => {
-                semesterHTML += `
-                    <div class="semester-section">
-                        <h4>${sem.name}</h4>
-                        <table>
-                            <tr>
-                                <th>Course Code</th>
-                                <th>Course Title</th>
-                                <th>Units</th>
-                                <th>Grade</th>
-                            </tr>`;
+
+        function createGpaDataTable(names, gpas) {
+            const table = document.getElementById('gpaDataTable');
+            let tableHTML = '<thead><tr><th>Semester</th><th>GPA</th></tr></thead><tbody>';
+
+            for (let i = 0; i < names.length; i++) {
+                tableHTML += `<tr><td>${names[i]}</td><td>${gpas[i].toFixed(2)}</td></tr>`;
+            }
+            tableHTML += '</tbody>';
+            table.innerHTML = tableHTML;
+        }
+
+        /* --- PDF DOWNLOAD FUNCTIONALITY --- */
+        async function downloadPDFReport() {
+            // Check if analysis has been run
+            if (!document.getElementById('results').classList.contains('active')) {
+                alert('Please run the GPA analysis first by clicking "Analyze My Performance"!');
+                return;
+            }
+
+            try {
+                // Initialize jsPDF
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                let y = 10; // Starting Y position
+
+                const studentName = document.getElementById('studentName').value.trim() || 'Student';
+                const studentId = document.getElementById('studentId').value.trim() || 'N/A';
+                const cgpa = document.getElementById('cgpaValue').textContent;
+                const classification = document.getElementById('classification').textContent;
+
+                // 1. Title and Header
+                doc.setFontSize(22);
+                doc.setTextColor(102, 126, 234); // Primary color
+                doc.text("GPA Performance Analysis Report", 105, y, null, null, "center");
+                y += 10;
+                doc.setLineWidth(0.5);
+                doc.line(10, y, 200, y); // Separator line
+                y += 7;
+
+                // 2. Student Info & Summary
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Student: ${studentName}`, 15, y);
+                y += 5;
+                doc.text(`ID: ${studentId}`, 15, y);
+                y += 5;
+                doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, y);
+                y += 10;
+
+                doc.setFontSize(16);
+                doc.setTextColor(118, 75, 162); 
+                doc.text("Performance Summary", 15, y);
+                y += 7;
+
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Current CGPA: ${cgpa}`, 15, y);
+                doc.text(`Classification: ${classification}`, 100, y);
+                y += 7;
+                doc.text(`Projected CGPA: ${document.getElementById('projectedCGPA').textContent}`, 15, y);
+                doc.text(`Trend: ${document.getElementById('trendIndicator').textContent}`, 100, y);
+                y += 10;
+
+                // 3. GPA Breakdown Table (Using autoTable)
+                doc.setFontSize(16);
+                doc.text("Semester-by-Semester Breakdown", 15, y);
+                y += 5;
+
+                // Get table data from the hidden element
+                const tableElement = document.getElementById('gpaDataTable');
+                const head = [['Semester', 'GPA']];
+                const body = Array.from(tableElement.querySelectorAll('tbody tr')).map(row => 
+                    Array.from(row.querySelectorAll('td')).map(cell => cell.innerText)
+                );
                 
-                student.courses.filter(c => c.semester === sem.name).forEach(course => {
-                    semesterHTML += `
-                        <tr>
-                            <td>${course.code}</td>
-                            <td>${course.title}</td>
-                            <td>${course.units}</td>
-                            <td><strong>${course.grade}</strong></td>
-                        </tr>`;
+                // Use autoTable (requires jspdf.plugin.autotable.js)
+                doc.autoTable({
+                    startY: y,
+                    head: head,
+                    body: body,
+                    theme: 'grid',
+                    headStyles: { fillColor: [102, 126, 234] },
+                    margin: { left: 15, right: 15 },
+                    styles: { fontSize: 10, cellPadding: 2 },
                 });
+                y = doc.autoTable.previous.finalY + 10;
+
+                // 4. GPA Chart (converted to image)
+                doc.setFontSize(16);
+                doc.text("GPA Trend Chart", 15, y);
+                y += 5;
+
+                const chartCanvas = document.getElementById('gpaChart');
+                // Ensure the chart is fully rendered before trying to convert it
+                const imgData = chartCanvas.toDataURL('image/png', 1.0); 
+
+                const chartWidth = 180;
+                const chartHeight = chartCanvas.height * (chartWidth / chartCanvas.width);
+
+                if (y + chartHeight > 280) { 
+                    doc.addPage();
+                    y = 10;
+                }
+                doc.addImage(imgData, 'PNG', 15, y, chartWidth, chartHeight);
+                y += chartHeight + 10;
+
+                // 5. Recommendations (captured as image)
+                if (y > 250) { 
+                    doc.addPage();
+                    y = 10;
+                }
+                doc.setFontSize(16);
+                doc.text("Personalized Recommendations", 15, y);
+                y += 5;
+
+                const recContainer = document.getElementById('recommendationsContainer');
+                const recCanvas = await html2canvas(recContainer, { scale: 2 });
+                const recImg = recCanvas.toDataURL('image/png');
                 
-                semesterHTML += `
-                        </table>
-                        <p><strong>Semester GPA: ${sem.gpa.toFixed(2)}</strong></p>
-                    </div>`;
-            });
-            
-            document.getElementById('semesterDetails').innerHTML = semesterHTML;
-            
-            // Update classification
-            let classification = student.cgpa >= 4.5 ? 'FIRST CLASS HONOURS' :
-                                student.cgpa >= 3.5 ? 'SECOND CLASS HONOURS (UPPER)' :
-                                'SECOND CLASS HONOURS (LOWER)';
-            document.getElementById('classification').textContent = classification;
-            
-            transcript.classList.toggle('active');
-            transcript.scrollIntoView({ behavior: 'smooth' });
+                const recWidth = 180;
+                const recHeight = recCanvas.height * (recWidth / recCanvas.width);
+                
+                if (y + recHeight > 280) { 
+                    doc.addPage();
+                    y = 10;
+                }
+                doc.addImage(recImg, 'PNG', 15, y, recWidth, recHeight);
+                y += recHeight + 5;
+
+
+                // 6. Path to First Class (captured as image)
+                if (y > 270) { 
+                    doc.addPage();
+                    y = 10;
+                }
+                doc.setFontSize(16);
+                doc.text("Path to First Class Analysis", 15, y);
+                y += 5;
+                
+                const pathContainer = document.getElementById('pathToFirstClass');
+                const pathCanvas = await html2canvas(pathContainer, { scale: 2 });
+                const pathImg = pathCanvas.toDataURL('image/png');
+
+                const pathWidth = 180;
+                const pathHeight = pathCanvas.height * (pathWidth / pathCanvas.width);
+
+                if (y + pathHeight > 280) { 
+                    doc.addPage();
+                    y = 10;
+                }
+                doc.addImage(pathImg, 'PNG', 15, y, pathWidth, pathHeight);
+                
+                // Final Download
+                doc.save(`GPA_Report_${studentName.replace(/\s+/g, '_')}.pdf`);
+            } catch (error) {
+                console.error("PDF generation failed:", error);
+                alert("An error occurred during PDF generation. Please ensure you have analyzed your performance.");
+            }
         }
-        
-        function predictOutcome() {
-            const selectedStudent = document.getElementById('studentSelect').value;
-            const student = studentData[selectedStudent];
-            
-            // Simple linear regression prediction
-            const n = student.semesters.length;
-            const avgImprovement = (student.semesters[n-1].gpa - student.semesters[0].gpa) / (n - 1);
-            const predictedNextGPA = Math.min(5.0, student.semesters[n-1].gpa + avgImprovement);
-            
-            // Calculate projected CGPA
-            const totalCurrentPoints = student.cgpa * student.semesters.reduce((sum, sem) => sum + sem.units, 0);
-            const projectedPoints = totalCurrentPoints + (predictedNextGPA * 15);
-            const projectedCGPA = projectedPoints / (student.semesters.reduce((sum, sem) => sum + sem.units, 0) + 15);
-            
-            alert(`PERFORMANCE PREDICTION\n\n` +
-                  `Student: ${student.name}\n` +
-                  `Current CGPA: ${student.cgpa.toFixed(2)}\n\n` +
-                  `Next Semester Prediction:\n` +
-                  `Expected GPA: ${predictedNextGPA.toFixed(2)}\n\n` +
-                  `Projected CGPA after next semester: ${projectedCGPA.toFixed(2)}\n\n` +
-                  `${projectedCGPA >= 4.5 ? '✅ On track for First Class!' : 
-                    projectedCGPA >= 3.5 ? ' Strong performance - keep it up!' : 
-                    'Room for improvement - focus on weak areas!'}`);
-        }
-        
-        // Initialize dashboard
-        updateDashboard();
     </script>
 </body>
 </html>
